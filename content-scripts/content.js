@@ -36,41 +36,52 @@
   // Helper function to return custom pixel art SVGs for retro theme
   function getServicePixelIcon(srv) {
     if (srv === 'claude') {
-      // 11x11 Grid Claude Asterisk Character with pixel eyes (omitted rects at x=4, x=6)
+      // Official 'Claude Code' Mascot in pixel perfect design
       return `
-        <svg viewBox="0 0 11 11" class="aim-pixel-svg">
-          <!-- Row 0 -->
-          <rect x="3" y="0" width="1" height="1" fill="currentColor"/>
-          <rect x="7" y="0" width="1" height="1" fill="currentColor"/>
-          <!-- Row 1 -->
-          <rect x="3" y="1" width="2" height="1" fill="currentColor"/>
-          <rect x="6" y="1" width="2" height="1" fill="currentColor"/>
-          <!-- Row 2 -->
-          <rect x="2" y="2" width="1" height="1" fill="currentColor"/>
-          <rect x="4" y="2" width="3" height="1" fill="currentColor"/>
-          <rect x="8" y="2" width="1" height="1" fill="currentColor"/>
-          <!-- Row 3 -->
-          <rect x="1" y="3" width="9" height="1" fill="currentColor"/>
-          <!-- Row 4 -->
-          <rect x="4" y="4" width="3" height="1" fill="currentColor"/>
-          <!-- Row 5 (Eyes at x=4 and x=6 are left transparent) -->
-          <rect x="0" y="5" width="4" height="1" fill="currentColor"/>
-          <rect x="5" y="5" width="1" height="1" fill="currentColor"/>
-          <rect x="7" y="5" width="4" height="1" fill="currentColor"/>
-          <!-- Row 6 -->
-          <rect x="4" y="6" width="3" height="1" fill="currentColor"/>
-          <!-- Row 7 -->
-          <rect x="1" y="7" width="9" height="1" fill="currentColor"/>
-          <!-- Row 8 -->
-          <rect x="2" y="8" width="1" height="1" fill="currentColor"/>
-          <rect x="4" y="8" width="3" height="1" fill="currentColor"/>
-          <rect x="8" y="8" width="1" height="1" fill="currentColor"/>
-          <!-- Row 9 -->
-          <rect x="3" y="9" width="2" height="1" fill="currentColor"/>
-          <rect x="6" y="9" width="2" height="1" fill="currentColor"/>
-          <!-- Row 10 -->
-          <rect x="3" y="10" width="1" height="1" fill="currentColor"/>
-          <rect x="7" y="10" width="1" height="1" fill="currentColor"/>
+        <svg viewBox="0 0 13 15" class="aim-pixel-svg">
+          <!-- Antennas Asterisk (Purple) -->
+          <rect x="6" y="0" width="1" height="1" fill="#A78BFA"/>
+          <rect x="5" y="1" width="3" height="1" fill="#A78BFA"/>
+          <rect x="6" y="2" width="1" height="1" fill="#A78BFA"/>
+          
+          <!-- Antenna Shaft (Light Gray) -->
+          <rect x="6" y="3" width="1" height="2" fill="#E2E8F0"/>
+          
+          <!-- Purple Cap (Purple) -->
+          <rect x="5" y="5" width="3" height="1" fill="#A78BFA"/>
+          <rect x="4" y="6" width="5" height="1" fill="#A78BFA"/>
+          
+          <!-- Orange Body (Orange) -->
+          <rect x="3" y="7" width="7" height="1" fill="#EA6C3B"/>
+          <rect x="2" y="8" width="9" height="1" fill="#EA6C3B"/>
+          
+          <!-- Row 9 (With hands and eyes) -->
+          <!-- Left hand -->
+          <rect x="1" y="9" width="1" height="2" fill="#EA6C3B"/>
+          <!-- Body core -->
+          <rect x="2" y="9" width="2" height="1" fill="#EA6C3B"/>
+          <rect x="5" y="9" width="3" height="1" fill="#EA6C3B"/>
+          <rect x="9" y="9" width="2" height="1" fill="#EA6C3B"/>
+          <!-- Right hand -->
+          <rect x="11" y="9" width="1" height="2" fill="#EA6C3B"/>
+          
+          <!-- Row 10 (With eyes) -->
+          <rect x="2" y="10" width="2" height="1" fill="#EA6C3B"/>
+          <rect x="5" y="10" width="3" height="1" fill="#EA6C3B"/>
+          <rect x="9" y="10" width="2" height="1" fill="#EA6C3B"/>
+          
+          <!-- Eyes (Dark Charcoal for Retro feel) -->
+          <rect x="4" y="9" width="1" height="2" fill="#1F2937"/>
+          <rect x="8" y="9" width="1" height="2" fill="#1F2937"/>
+          
+          <!-- Lower body -->
+          <rect x="2" y="11" width="9" height="2" fill="#EA6C3B"/>
+          
+          <!-- Feet (4 legs) -->
+          <rect x="3" y="13" width="1" height="2" fill="#EA6C3B"/>
+          <rect x="5" y="13" width="1" height="2" fill="#EA6C3B"/>
+          <rect x="7" y="13" width="1" height="2" fill="#EA6C3B"/>
+          <rect x="9" y="13" width="1" height="2" fill="#EA6C3B"/>
         </svg>
       `;
     } else if (srv === 'gemini') {
