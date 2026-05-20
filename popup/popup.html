@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Usage Monitor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Global SVG Gradient Definitions -->
+  <svg style="width:0; height:0; position:absolute;" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="claude-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#A78BFA" />
+        <stop offset="100%" stop-color="#6D28D9" />
+      </linearGradient>
+      <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#749BFF" />
+        <stop offset="100%" stop-color="#B678FF" />
+      </linearGradient>
+      <linearGradient id="aistudio-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FCD34D" />
+        <stop offset="100%" stop-color="#D97706" />
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="aim-popup">
+    <!-- Header -->
+    <header class="aim-header">
+      <div class="aim-logo-area">
+        <div class="aim-logo-glow"></div>
+        <span class="aim-title-main">AI Usage Monitor</span>
+      </div>
+      <div class="aim-header-actions">
+        <!-- Segmented Mode Control Switch -->
+        <div class="aim-mode-toggle-container" id="aim-segmented-switcher">
+          <button id="aim-toggle-count" class="aim-mode-btn active" data-mode="count" title="件数表示">件数</button>
+          <button id="aim-toggle-percent" class="aim-mode-btn" data-mode="percent" title="パーセンテージ表示">％</button>
+        </div>
+        <button id="aim-btn-settings" class="aim-icon-btn" title="設定を開く">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Unified Dashboard Body -->
+    <main class="aim-content">
+      <!-- Service Cards Container -->
+      <div class="aim-cards-grid">
+        <!-- Claude Pro Card -->
+        <div class="aim-card aim-card-claude" data-service="claude">
+          <div class="aim-card-visual aim-battery-visual">
+            <div class="aim-horizontal-battery-meter">
+              <div class="aim-battery-body">
+                <div id="claude-battery-level" class="aim-battery-level"></div>
+              </div>
+              <div class="aim-battery-cap"></div>
+            </div>
+            <div class="aim-battery-text">
+              <span id="claude-count" class="aim-count-val">0</span>
+              <span id="claude-limit" class="aim-limit-val">/45</span>
+            </div>
+          </div>
+          <div class="aim-card-details">
+            <div class="aim-service-header">
+              <span class="aim-service-label">Claude Pro</span>
+              <div class="aim-dot-indicator claude-dot"></div>
+            </div>
+            <div class="aim-countdown-text" id="claude-decay-info">枠解放: なし</div>
+            <div class="aim-card-actions">
+              <button class="aim-btn-adjust decrease" data-service="claude" title="回数を1減らす">-</button>
+              <button class="aim-btn-adjust increase" data-service="claude" title="回数を1増やす">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gemini Card -->
+        <div class="aim-card aim-card-gemini" data-service="gemini">
+          <div class="aim-card-visual aim-battery-visual">
+            <div class="aim-horizontal-battery-meter">
+              <div class="aim-battery-body">
+                <div id="gemini-battery-level" class="aim-battery-level"></div>
+              </div>
+              <div class="aim-battery-cap"></div>
+            </div>
+            <div class="aim-battery-text">
+              <span id="gemini-count" class="aim-count-val">0</span>
+              <span id="gemini-limit" class="aim-limit-val">/50</span>
+            </div>
+          </div>
+          <div class="aim-card-details">
+            <div class="aim-service-header">
+              <span class="aim-service-label">Gemini</span>
+              <div class="aim-dot-indicator gemini-dot"></div>
+            </div>
+            <div class="aim-countdown-text" id="gemini-decay-info">枠解放: なし</div>
+            <div class="aim-card-actions">
+              <button class="aim-btn-adjust decrease" data-service="gemini" title="回数を1減らす">-</button>
+              <button class="aim-btn-adjust increase" data-service="gemini" title="回数を1増やす">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Studio Card -->
+        <div class="aim-card aim-card-aistudio" data-service="aistudio">
+          <div class="aim-card-visual aim-battery-visual">
+            <div class="aim-horizontal-battery-meter">
+              <div class="aim-battery-body">
+                <div id="aistudio-battery-level" class="aim-battery-level"></div>
+              </div>
+              <div class="aim-battery-cap"></div>
+            </div>
+            <div class="aim-battery-text">
+              <span id="aistudio-count" class="aim-count-val">0</span>
+              <span id="aistudio-limit" class="aim-limit-val">/50</span>
+            </div>
+          </div>
+          <div class="aim-card-details">
+            <div class="aim-service-header">
+              <span class="aim-service-label">AI Studio</span>
+              <div class="aim-dot-indicator aistudio-dot"></div>
+            </div>
+            <div class="aim-countdown-text" id="aistudio-decay-info">枠解放: なし</div>
+            <div class="aim-card-actions">
+              <button class="aim-btn-adjust decrease" data-service="aistudio" title="回数を1減らす">-</button>
+              <button class="aim-btn-adjust increase" data-service="aistudio" title="回数を1増やす">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Log Collapsible Panel -->
+      <section class="aim-history-section">
+        <button id="aim-toggle-history" class="aim-history-toggle">
+          <span>送信履歴の確認・編集</span>
+          <svg class="aim-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <div id="aim-history-content" class="aim-history-content hidden">
+          <div class="aim-history-tabs">
+            <button class="aim-tab-btn active" data-tab="claude">Claude</button>
+            <button class="aim-tab-btn" data-tab="gemini">Gemini</button>
+            <button class="aim-tab-btn" data-tab="aistudio">AI Studio</button>
+          </div>
+          <div id="aim-log-list" class="aim-log-list">
+            <!-- Dynamically populated -->
+            <div class="aim-log-empty">履歴はありません</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="aim-settings-modal" class="aim-modal hidden">
+      <div class="aim-modal-content">
+        <header class="aim-modal-header">
+          <h3>上限設定のカスタマイズ</h3>
+          <button id="aim-btn-close-settings" class="aim-modal-close">&times;</button>
+        </header>
+        <div class="aim-modal-body">
+          <!-- Claude limits -->
+          <div class="aim-setting-group">
+            <h4 class="aim-setting-service claude-text">Claude Pro</h4>
+            <div class="aim-input-row">
+              <div class="aim-input-field">
+                <label for="input-claude-limit">送信上限（回）</label>
+                <input type="number" id="input-claude-limit" min="1" max="500">
+              </div>
+              <div class="aim-input-field">
+                <label for="input-claude-window">時間枠（時間）</label>
+                <input type="number" id="input-claude-window" min="1" max="48" step="0.5">
+              </div>
+              <div class="aim-input-field flex-wide">
+                <label for="input-claude-current-count" title="現在の正確な送信数に手動で同期します">現在のカウント（同期用）</label>
+                <input type="number" id="input-claude-current-count" min="0" max="500" placeholder="現在の回数">
+              </div>
+            </div>
+          </div>
+
+          <!-- Gemini limits -->
+          <div class="aim-setting-group">
+            <h4 class="aim-setting-service gemini-text">Gemini</h4>
+            <div class="aim-input-row">
+              <div class="aim-input-field">
+                <label for="input-gemini-limit">送信上限（回）</label>
+                <input type="number" id="input-gemini-limit" min="1" max="500">
+              </div>
+              <div class="aim-input-field">
+                <label for="input-gemini-window">時間枠（時間）</label>
+                <input type="number" id="input-gemini-window" min="1" max="48" step="0.5">
+              </div>
+              <div class="aim-input-field flex-wide">
+                <label for="input-gemini-current-count" title="現在の正確な送信数に手動で同期します">現在のカウント（同期用）</label>
+                <input type="number" id="input-gemini-current-count" min="0" max="500" placeholder="現在の回数">
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Studio limits -->
+          <div class="aim-setting-group">
+            <h4 class="aim-setting-service aistudio-text">AI Studio</h4>
+            <div class="aim-input-row">
+              <div class="aim-input-field">
+                <label for="input-aistudio-limit">送信上限（回）</label>
+                <input type="number" id="input-aistudio-limit" min="1" max="500">
+              </div>
+              <div class="aim-input-field">
+                <label for="input-aistudio-window">時間枠（時間）</label>
+                <input type="number" id="input-aistudio-window" min="1" max="48" step="0.5">
+              </div>
+              <div class="aim-input-field flex-wide">
+                <label for="input-aistudio-current-count" title="現在の正確な送信数に手動で同期します">現在のカウント（同期用）</label>
+                <input type="number" id="input-aistudio-current-count" min="0" max="500" placeholder="現在の回数">
+              </div>
+            </div>
+          </div>
+
+          <!-- General settings -->
+          <div class="aim-setting-group border-top">
+            <h4 class="aim-setting-service common-text">全般設定</h4>
+            <div class="aim-input-row">
+              <div class="aim-input-field select-field">
+                <label for="input-default-display-mode">起動時の表示モード</label>
+                <select id="input-default-display-mode" class="aim-select-input">
+                  <option value="count">件数表示 (例: 1/45)</option>
+                  <option value="percent">％表示 (例: 2%)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="aim-modal-footer">
+          <button id="aim-btn-reset" class="aim-btn-secondary">デフォルトに戻す</button>
+          <button id="aim-btn-save" class="aim-btn-primary">保存する</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

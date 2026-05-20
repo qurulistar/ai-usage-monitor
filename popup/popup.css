@@ -1,0 +1,692 @@
+/* AI Usage Monitor - Central Dashboard Retro Pixel CSS */
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap');
+
+:root {
+  --bg-main: #0B0B0E;
+  --bg-card: #18181C;
+  --border-color: #000000;
+  
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA;
+  --text-muted: #52525B;
+  
+  --claude-color: #8B5CF6;
+  --claude-retro: #A78BFA;
+  
+  --gemini-color: #5F87FF;
+  --gemini-retro: #8E70FF;
+  
+  --aistudio-color: #D97706;
+  --aistudio-retro: #FCD34D;
+
+  --emerald: #00FF66; /* Neon Safety Green */
+  --red: #FF3333;     /* Neon Critical Red */
+  --amber: #FFCC00;   /* Neon Warning Yellow */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 380px;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: 'Press Start 2P', 'DotGothic16', monospace !important;
+  font-size: 8px; /* Blocky fonts fit better when small */
+  line-height: 1.5;
+  overflow-x: hidden;
+  image-rendering: pixelated;
+}
+
+.aim-popup {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 520px;
+  border: 4px solid #000000;
+}
+
+/* Header styled as Retro Arcade HUD */
+.aim-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 4px double #27272A;
+  padding-bottom: 12px;
+}
+
+.aim-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+/* Retro flickering coin/light animation */
+.aim-logo-glow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--emerald);
+  left: 2px;
+  box-shadow: 0 0 6px var(--emerald);
+  animation: retro-flash 1s steps(2, start) infinite;
+}
+
+.aim-title-main {
+  font-size: 10px;
+  font-weight: normal;
+  font-family: 'Press Start 2P', monospace !important;
+  color: var(--emerald) !important;
+  text-shadow: 2px 2px 0px #000000 !important;
+  padding-left: 16px;
+  background: none;
+  -webkit-text-fill-color: initial;
+}
+
+@keyframes retro-flash {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+/* Header Actions Container */
+.aim-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Segmented Mode Switcher (Retro Push-buttons) */
+.aim-mode-toggle-container {
+  display: flex;
+  background: #000000;
+  border: 2px solid #3F3F46;
+  border-radius: 0px;
+  padding: 2px;
+}
+
+.aim-mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: 'DotGothic16', sans-serif !important;
+  font-size: 11px;
+  font-weight: normal;
+  padding: 2px 8px;
+  border-radius: 0px;
+  cursor: pointer;
+  outline: none;
+  image-rendering: pixelated;
+}
+
+.aim-mode-btn.active {
+  background: var(--emerald);
+  color: #000000 !important;
+  font-weight: bold;
+}
+
+.aim-mode-btn:not(.active):hover {
+  color: #FFFFFF;
+  background: #27272A;
+}
+
+/* Icon Buttons (Retro Controller Style) */
+.aim-icon-btn {
+  background: #27272A;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aim-icon-btn:hover {
+  background: #3F3F46;
+  color: #FFFFFF;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.aim-icon-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.aim-icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Content Container */
+.aim-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Grid layout for Cards */
+.aim-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* NES Style Game Dialogue Box Cards */
+.aim-card {
+  background: var(--bg-card);
+  border: 4px solid #000000;
+  border-radius: 0px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 4px 4px 0px #000000,
+              inset -2px -2px 0px rgba(0, 0, 0, 0.4),
+              inset 2px 2px 0px rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Disabled glassy hover, replaced with retro frame border-color shifts */
+.aim-card::before {
+  display: none !important;
+}
+
+.aim-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000000,
+              inset -2px -2px 0px rgba(0, 0, 0, 0.4),
+              inset 2px 2px 0px rgba(255, 255, 255, 0.12);
+}
+
+.aim-card.claude-active:hover { border-color: var(--claude-retro) !important; }
+.aim-card.gemini-active:hover { border-color: var(--gemini-retro) !important; }
+.aim-card.aistudio-active:hover { border-color: var(--aistudio-retro) !important; }
+
+/* Retro Battery Gauge Indicator Styles (MacBook-style Horizontal Batteries) */
+.aim-battery-visual {
+  position: relative;
+  width: 54px !important;
+  height: 58px;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  flex-shrink: 0;
+}
+
+.aim-horizontal-battery-meter {
+  width: 44px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  position: relative !important;
+  flex-shrink: 0 !important;
+}
+
+.aim-battery-cap {
+  width: 3px !important;
+  height: 10px !important;
+  background: #000000 !important;
+  flex-shrink: 0 !important;
+}
+
+.aim-battery-body {
+  flex-grow: 1 !important;
+  height: 100% !important;
+  background: #27272A !important;
+  border: 3px solid #000000 !important;
+  padding: 2px !important;
+  display: flex !important;
+  align-items: center !important; /* Fill horizontally from left to right */
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+.aim-battery-level {
+  width: 100%;
+  height: 100% !important;
+  /* Stepped pixel block fill effect for horizontal battery */
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--theme-battery-color, var(--emerald)) 0px,
+    var(--theme-battery-color, var(--emerald)) 4px,
+    transparent 4px,
+    transparent 6px
+  ) !important;
+  background-size: 6px 100% !important;
+  transition: width 0.4s steps(8, end) !important;
+}
+
+/* Retro battery level states based on JS classes */
+.aim-battery-level.level-high {
+  --theme-battery-color: var(--emerald) !important; /* Green */
+}
+.aim-battery-level.level-med {
+  --theme-battery-color: var(--amber) !important;   /* Yellow */
+}
+.aim-battery-level.level-low {
+  --theme-battery-color: var(--red) !important;     /* Red */
+}
+
+.aim-battery-text {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.3;
+  gap: 2px !important;
+}
+
+.aim-count-val {
+  font-size: 8px;
+  font-family: 'Press Start 2P', monospace !important;
+  font-weight: normal;
+  color: var(--text-primary);
+}
+
+.aim-limit-val {
+  font-size: 7px;
+  font-family: 'Press Start 2P', monospace !important;
+  color: var(--text-secondary);
+}
+
+/* Card details (Right Column) */
+.aim-card-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aim-service-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aim-service-label {
+  font-size: 11px; /* DotGothic16 for Japanese */
+  font-family: 'DotGothic16', sans-serif !important;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+/* Pixel Sparkle/Bullet indicator */
+.aim-dot-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 0px !important; /* Square bullet */
+  animation: retro-flash 0.8s steps(2, start) infinite;
+}
+
+.claude-dot { background-color: var(--claude-retro) !important; box-shadow: 0 0 4px var(--claude-retro); }
+.gemini-dot { background-color: var(--gemini-retro) !important; box-shadow: 0 0 4px var(--gemini-retro); }
+.aistudio-dot { background-color: var(--aistudio-retro) !important; box-shadow: 0 0 4px var(--aistudio-retro); }
+
+.aim-countdown-text {
+  font-size: 9px;
+  font-family: 'DotGothic16', sans-serif !important;
+  color: var(--text-secondary);
+}
+
+/* Card quick increment/decrement buttons (Retro Push buttons) */
+.aim-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.aim-btn-adjust {
+  flex: 1;
+  background: #27272A;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  color: var(--text-primary);
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px;
+  padding: 3px 0;
+  border-radius: 0px;
+  cursor: pointer;
+}
+
+.aim-btn-adjust:hover {
+  background: #3F3F46;
+}
+
+.aim-btn-adjust:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px #000000;
+}
+
+/* History Log Section styled as a Retro Quest Log */
+.aim-history-section {
+  background: #000000;
+  border: 4px solid #000000;
+  border-radius: 0px;
+  box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.05);
+}
+
+.aim-history-toggle {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: 'DotGothic16', sans-serif !important;
+  font-size: 11px;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aim-history-toggle:hover {
+  background-color: #18181C;
+  color: #FFFFFF;
+}
+
+.aim-chevron {
+  width: 12px;
+  height: 12px;
+  image-rendering: pixelated;
+}
+
+.aim-history-content {
+  border-top: 2px dashed #27272A;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aim-history-tabs {
+  display: flex;
+  background: #18181C;
+  border: 2px solid #000000;
+  border-radius: 0px;
+  padding: 2px;
+}
+
+.aim-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px;
+  padding: 3px 0;
+  border-radius: 0px;
+  cursor: pointer;
+}
+
+.aim-tab-btn.active {
+  background: var(--emerald);
+  color: #000000 !important;
+  font-weight: bold;
+}
+
+.aim-log-list {
+  max-height: 100px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aim-log-list::-webkit-scrollbar {
+  width: 6px;
+}
+.aim-log-list::-webkit-scrollbar-thumb {
+  background: #27272A;
+  border: 1px solid #000000;
+}
+
+.aim-log-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #18181C;
+  border: 2px solid #000000;
+  border-radius: 0px;
+  padding: 4px 6px;
+  font-size: 9px;
+  font-family: 'DotGothic16', sans-serif !important;
+}
+
+.aim-log-time {
+  color: var(--text-primary);
+}
+
+.aim-log-relative {
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.aim-btn-delete-log {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.aim-btn-delete-log:hover {
+  color: var(--red);
+}
+
+.aim-log-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-family: 'DotGothic16', sans-serif !important;
+  font-size: 11px;
+  padding: 10px 0;
+}
+
+/* NES Style Double-bordered Message Box for Settings Modal */
+.aim-modal {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.aim-modal-content {
+  width: 330px;
+  background: #000000;
+  /* Retro RPG Double Border */
+  border: 6px double #FFFFFF !important;
+  border-radius: 0px !important;
+  padding: 14px;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aim-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px dashed #FFFFFF;
+  padding-bottom: 6px;
+}
+
+.aim-modal-header h3 {
+  font-size: 10px;
+  font-family: 'Press Start 2P', monospace !important;
+  color: #FFFFFF;
+}
+
+.aim-modal-close {
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.aim-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.aim-modal-body::-webkit-scrollbar {
+  width: 4px;
+}
+.aim-modal-body::-webkit-scrollbar-thumb {
+  background: #FFFFFF;
+}
+
+.aim-setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #000000;
+  border: 2px dashed #27272A;
+  padding: 6px 10px;
+  border-radius: 0px;
+}
+
+.aim-setting-service {
+  font-size: 10px;
+  font-family: 'Press Start 2P', monospace !important;
+}
+
+.claude-text { color: var(--claude-retro); }
+.gemini-text { color: var(--gemini-retro); }
+.aistudio-text { color: var(--aistudio-retro); }
+
+.aim-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.aim-input-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aim-input-field label {
+  font-size: 9px;
+  font-family: 'DotGothic16', sans-serif !important;
+  color: var(--text-secondary);
+}
+
+.aim-input-field input {
+  background: #000000;
+  border: 2px solid #3F3F46;
+  border-radius: 0px;
+  color: #FFFFFF;
+  padding: 3px 6px;
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 7px;
+  outline: none;
+  width: 100%;
+}
+
+.aim-input-field input:focus {
+  border-color: #FFFFFF;
+}
+
+.select-field {
+  flex: 1;
+}
+
+.aim-select-input {
+  background: #000000;
+  border: 2px solid #3F3F46;
+  border-radius: 0px;
+  color: #FFFFFF;
+  padding: 3px 6px;
+  font-family: 'DotGothic16', sans-serif !important;
+  font-size: 10px;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.aim-select-input:focus {
+  border-color: #FFFFFF;
+}
+
+.aim-select-input option {
+  background-color: #000000;
+  color: #FFFFFF;
+}
+
+/* Modal Footer Buttons */
+.aim-modal-footer {
+  display: flex;
+  gap: 8px;
+  border-top: 2px dashed #FFFFFF;
+  padding-top: 8px;
+}
+
+.aim-btn-primary, .aim-btn-secondary {
+  flex: 1;
+  padding: 5px 0;
+  border-radius: 0px;
+  font-family: 'DotGothic16', sans-serif !important;
+  font-size: 11px;
+  cursor: pointer;
+  outline: none;
+}
+
+.aim-btn-primary {
+  background: #FFFFFF;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  color: #000000;
+  font-weight: bold;
+}
+
+.aim-btn-primary:hover {
+  background: var(--emerald);
+}
+
+.aim-btn-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px #000000;
+}
+
+.aim-btn-secondary {
+  background: #27272A;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  color: #FFFFFF;
+}
+
+.aim-btn-secondary:hover {
+  background: #3F3F46;
+}
+
+.aim-btn-secondary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px #000000;
+}
