@@ -278,7 +278,7 @@
 .aim-collapsed-battery-body {
   width: 39px !important; /* Fixed width to prevent Flexbox child percentage collapse */
   min-width: 39px !important;
-  height: 100% !important;
+  height: 20px !important; /* Fixed height to prevent height collapse */
   background: #18181B !important;
   border: 2px solid #FFFFFF !important; /* High contrast white border */
   border-radius: 0px !important; /* Pure sharp pixel corners for retro aesthetic */
@@ -290,57 +290,49 @@
 
 .aim-collapsed-battery-level {
   display: block !important;
-  height: 100% !important;
+  height: 12px !important; /* Fixed internal height (20px - 4px border - 4px padding = 12px) */
   width: 100%;
   border-radius: 0px !important;
-  /* Premium robust repeat pattern: 4px white, 2px transparent, repeated horizontally */
-  background-image: linear-gradient(
+  /* Blocky NES-style HP segment pattern in pure white (4px white, 2px space) */
+  background-image: repeating-linear-gradient(
     90deg, 
-    #FFFFFF 0px, 
+    #FFFFFF, 
     #FFFFFF 4px, 
     transparent 4px, 
     transparent 6px
   ) !important;
-  background-size: 6px 100% !important;
-  background-repeat: repeat-x !important; /* Force horizontal tiling */
   transition: width 0.2s ease-out !important; /* Smooth and bulletproof transition */
 }
 
 /* Battery levels style overrides based on status coloring classes */
 .aim-collapsed-battery-level.level-high {
-  background-image: linear-gradient(
+  background-image: repeating-linear-gradient(
     90deg, 
-    #FFFFFF 0px, 
+    #FFFFFF, 
     #FFFFFF 4px, 
     transparent 4px, 
     transparent 6px
   ) !important;
-  background-size: 6px 100% !important;
-  background-repeat: repeat-x !important;
 }
 
 .aim-collapsed-battery-level.level-med {
-  background-image: linear-gradient(
+  background-image: repeating-linear-gradient(
     90deg, 
-    #FFFFFF 0px, 
+    #FFFFFF, 
     #FFFFFF 4px, 
     transparent 4px, 
     transparent 6px
   ) !important;
-  background-size: 6px 100% !important;
-  background-repeat: repeat-x !important;
 }
 
 .aim-collapsed-battery-level.level-low {
-  background-image: linear-gradient(
+  background-image: repeating-linear-gradient(
     90deg, 
-    #EF4444 0px, 
+    #EF4444, 
     #EF4444 4px, 
     transparent 4px, 
     transparent 6px
   ) !important;
-  background-size: 6px 100% !important;
-  background-repeat: repeat-x !important;
 }
 
 .aim-collapsed-battery-cap {
