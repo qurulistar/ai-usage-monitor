@@ -280,40 +280,66 @@
   height: 100% !important;
   background: #18181B !important;
   border: 2px solid #FFFFFF !important; /* High contrast white border */
-  border-radius: 4px !important;
+  border-radius: 0px !important; /* Pure sharp pixel corners for retro aesthetic */
   box-sizing: border-box !important;
   position: relative !important;
-  display: flex !important;
-  align-items: center !important;
+  display: block !important; /* Switch to block to prevent flex child width collapse */
   padding: 2px !important;
 }
 
 .aim-collapsed-battery-level {
+  display: block !important;
   height: 100% !important;
   width: 100%;
-  border-radius: 2px !important;
-  background-color: #FFFFFF !important; /* Pure white fill for macOS feel */
+  border-radius: 0px !important;
+  /* Blocky NES-style HP segment pattern in pure white (4px white, 2px space) */
+  background-image: repeating-linear-gradient(
+    90deg, 
+    #FFFFFF 0px, 
+    #FFFFFF 4px, 
+    transparent 4px, 
+    transparent 6px
+  ) !important;
+  background-size: 6px 100% !important;
   transition: width 0.3s steps(5, end) !important;
 }
 
 /* Battery levels style overrides based on status coloring classes */
 .aim-collapsed-battery-level.level-high {
-  background-color: #FFFFFF !important; /* Solid White */
+  background-image: repeating-linear-gradient(
+    90deg, 
+    #FFFFFF 0px, 
+    #FFFFFF 4px, 
+    transparent 4px, 
+    transparent 6px
+  ) !important;
 }
 
 .aim-collapsed-battery-level.level-med {
-  background-color: #FFFFFF !important; /* Solid White */
+  background-image: repeating-linear-gradient(
+    90deg, 
+    #FFFFFF 0px, 
+    #FFFFFF 4px, 
+    transparent 4px, 
+    transparent 6px
+  ) !important;
 }
 
 .aim-collapsed-battery-level.level-low {
-  background-color: #EF4444 !important; /* Warning Red when low */
+  background-image: repeating-linear-gradient(
+    90deg, 
+    #EF4444 0px, 
+    #EF4444 4px, 
+    transparent 4px, 
+    transparent 6px
+  ) !important;
 }
 
 .aim-collapsed-battery-cap {
-  width: 3px !important;
+  width: 2px !important;
   height: 8px !important;
-  background: #FFFFFF !important; /* Matching white terminal pole cap */
-  border-radius: 0 3px 3px 0 !important;
+  background: #FFFFFF !important;
+  border-radius: 0px !important; /* Sharp corners for terminal cap to match pixel theme */
   flex-shrink: 0 !important;
   margin-left: 1px !important;
 }
