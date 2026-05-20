@@ -279,7 +279,7 @@
   flex-grow: 1 !important;
   height: 100% !important;
   background: #18181B !important;
-  border: 2px solid #8E9196 !important;
+  border: 2px solid #FFFFFF !important; /* High contrast white border */
   border-radius: 4px !important;
   box-sizing: border-box !important;
   position: relative !important;
@@ -292,27 +292,27 @@
   height: 100% !important;
   width: 100%;
   border-radius: 2px !important;
-  background-color: var(--theme-retro-color) !important;
+  background-color: #FFFFFF !important; /* Pure white fill for macOS feel */
   transition: width 0.3s steps(5, end) !important;
 }
 
 /* Battery levels style overrides based on status coloring classes */
 .aim-collapsed-battery-level.level-high {
-  background-color: #10B981 !important; /* Green */
+  background-color: #FFFFFF !important; /* Solid White */
 }
 
 .aim-collapsed-battery-level.level-med {
-  background-color: #F59E0B !important; /* Yellow */
+  background-color: #FFFFFF !important; /* Solid White */
 }
 
 .aim-collapsed-battery-level.level-low {
-  background-color: #EF4444 !important; /* Red */
+  background-color: #EF4444 !important; /* Warning Red when low */
 }
 
 .aim-collapsed-battery-cap {
   width: 3px !important;
   height: 8px !important;
-  background: #8E9196 !important;
+  background: #FFFFFF !important; /* Matching white terminal pole cap */
   border-radius: 0 3px 3px 0 !important;
   flex-shrink: 0 !important;
   margin-left: 1px !important;
