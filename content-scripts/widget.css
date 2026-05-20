@@ -270,15 +270,15 @@
   display: flex !important;
   align-items: center !important;
   width: 42px !important;
-  height: 20px !important;
+  height: 14px !important; /* Reduced to 70% thickness for premium balance with character */
   position: relative !important;
-  margin-bottom: 4px !important;
+  margin-bottom: 6px !important; /* Slightly increased bottom margin to balance spacing */
 }
 
 .aim-collapsed-battery-body {
   width: 39px !important; /* Fixed width to prevent Flexbox child percentage collapse */
   min-width: 39px !important;
-  height: 20px !important; /* Fixed height to prevent height collapse */
+  height: 14px !important; /* Reduced to 70% thickness */
   background: #18181B !important;
   border: 2px solid #FFFFFF !important; /* High contrast white border */
   border-radius: 0px !important; /* Pure sharp pixel corners for retro aesthetic */
@@ -290,7 +290,7 @@
 
 .aim-collapsed-battery-level {
   display: block !important;
-  height: 12px !important; /* Fixed internal height (20px - 4px border - 4px padding = 12px) */
+  height: 6px !important; /* Fixed internal height (14px - 4px border - 4px padding = 6px) */
   width: 100%;
   border-radius: 0px !important;
   /* Blocky NES-style HP segment pattern in pure white (4px white, 2px space) */
@@ -337,7 +337,7 @@
 
 .aim-collapsed-battery-cap {
   width: 2px !important;
-  height: 8px !important;
+  height: 6px !important; /* Reduced to 6px to match 14px body */
   background: #FFFFFF !important;
   border-radius: 0px !important; /* Sharp corners for terminal cap to match pixel theme */
   flex-shrink: 0 !important;
