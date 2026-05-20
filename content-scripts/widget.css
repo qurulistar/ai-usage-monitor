@@ -269,8 +269,8 @@
 .aim-collapsed-battery {
   display: flex !important;
   align-items: center !important;
-  width: 36px !important;
-  height: 15px !important;
+  width: 42px !important;
+  height: 20px !important;
   position: relative !important;
   margin-bottom: 4px !important;
 }
@@ -285,13 +285,13 @@
   position: relative !important;
   display: flex !important;
   align-items: center !important;
-  padding: 1px !important;
+  padding: 2px !important;
 }
 
 .aim-collapsed-battery-level {
   height: 100% !important;
   width: 100%;
-  border-radius: 1px !important;
+  border-radius: 2px !important;
   background-color: var(--theme-retro-color) !important;
   transition: width 0.3s steps(5, end) !important;
 }
@@ -310,10 +310,10 @@
 }
 
 .aim-collapsed-battery-cap {
-  width: 2px !important;
-  height: 5px !important;
+  width: 3px !important;
+  height: 8px !important;
   background: #8E9196 !important;
-  border-radius: 0 2px 2px 0 !important;
+  border-radius: 0 3px 3px 0 !important;
   flex-shrink: 0 !important;
   margin-left: 1px !important;
 }
