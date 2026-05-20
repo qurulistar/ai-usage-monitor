@@ -36,41 +36,62 @@
   // Helper function to return custom pixel art SVGs for retro theme
   function getServicePixelIcon(srv) {
     if (srv === 'claude') {
-      // 11x8 Grid Space Invader
+      // 11x11 Grid Claude Asterisk Character with pixel eyes (omitted rects at x=4, x=6)
       return `
-        <svg viewBox="0 0 11 8" class="aim-pixel-svg">
-          <rect x="2" y="0" width="1" height="1" fill="currentColor"/>
-          <rect x="8" y="0" width="1" height="1" fill="currentColor"/>
-          <rect x="3" y="1" width="1" height="1" fill="currentColor"/>
-          <rect x="7" y="1" width="1" height="1" fill="currentColor"/>
-          <rect x="2" y="2" width="7" height="1" fill="currentColor"/>
-          <rect x="1" y="3" width="2" height="1" fill="currentColor"/>
-          <rect x="4" y="3" width="3" height="1" fill="currentColor"/>
-          <rect x="8" y="3" width="2" height="1" fill="currentColor"/>
-          <rect x="0" y="4" width="11" height="1" fill="currentColor"/>
-          <rect x="0" y="5" width="1" height="1" fill="currentColor"/>
-          <rect x="2" y="5" width="7" height="1" fill="currentColor"/>
-          <rect x="10" y="5" width="1" height="1" fill="currentColor"/>
-          <rect x="0" y="6" width="1" height="1" fill="currentColor"/>
-          <rect x="2" y="6" width="1" height="1" fill="currentColor"/>
-          <rect x="8" y="6" width="1" height="1" fill="currentColor"/>
-          <rect x="10" y="6" width="1" height="1" fill="currentColor"/>
-          <rect x="3" y="7" width="2" height="1" fill="currentColor"/>
-          <rect x="6" y="7" width="2" height="1" fill="currentColor"/>
+        <svg viewBox="0 0 11 11" class="aim-pixel-svg">
+          <!-- Row 0 -->
+          <rect x="3" y="0" width="1" height="1" fill="currentColor"/>
+          <rect x="7" y="0" width="1" height="1" fill="currentColor"/>
+          <!-- Row 1 -->
+          <rect x="3" y="1" width="2" height="1" fill="currentColor"/>
+          <rect x="6" y="1" width="2" height="1" fill="currentColor"/>
+          <!-- Row 2 -->
+          <rect x="2" y="2" width="1" height="1" fill="currentColor"/>
+          <rect x="4" y="2" width="3" height="1" fill="currentColor"/>
+          <rect x="8" y="2" width="1" height="1" fill="currentColor"/>
+          <!-- Row 3 -->
+          <rect x="1" y="3" width="9" height="1" fill="currentColor"/>
+          <!-- Row 4 -->
+          <rect x="4" y="4" width="3" height="1" fill="currentColor"/>
+          <!-- Row 5 (Eyes at x=4 and x=6 are left transparent) -->
+          <rect x="0" y="5" width="4" height="1" fill="currentColor"/>
+          <rect x="5" y="5" width="1" height="1" fill="currentColor"/>
+          <rect x="7" y="5" width="4" height="1" fill="currentColor"/>
+          <!-- Row 6 -->
+          <rect x="4" y="6" width="3" height="1" fill="currentColor"/>
+          <!-- Row 7 -->
+          <rect x="1" y="7" width="9" height="1" fill="currentColor"/>
+          <!-- Row 8 -->
+          <rect x="2" y="8" width="1" height="1" fill="currentColor"/>
+          <rect x="4" y="8" width="3" height="1" fill="currentColor"/>
+          <rect x="8" y="8" width="1" height="1" fill="currentColor"/>
+          <!-- Row 9 -->
+          <rect x="3" y="9" width="2" height="1" fill="currentColor"/>
+          <rect x="6" y="9" width="2" height="1" fill="currentColor"/>
+          <!-- Row 10 -->
+          <rect x="3" y="10" width="1" height="1" fill="currentColor"/>
+          <rect x="7" y="10" width="1" height="1" fill="currentColor"/>
         </svg>
       `;
     } else if (srv === 'gemini') {
-      // 11x11 Grid Sparkle (Gemini Concave Star Logo)
+      // 11x11 Grid Gemini Sparkle Character (Concave Astroid) with eyes (omitted rects at x=4, x=6)
       return `
         <svg viewBox="0 0 11 11" class="aim-pixel-svg">
+          <!-- Top vertical spike -->
           <rect x="5" y="0" width="1" height="1" fill="currentColor"/>
           <rect x="5" y="1" width="1" height="1" fill="currentColor"/>
           <rect x="5" y="2" width="1" height="1" fill="currentColor"/>
-          <rect x="4" y="3" width="3" height="1" fill="currentColor"/>
-          <rect x="3" y="4" width="5" height="1" fill="currentColor"/>
-          <rect x="0" y="5" width="11" height="1" fill="currentColor"/>
-          <rect x="3" y="6" width="5" height="1" fill="currentColor"/>
-          <rect x="4" y="7" width="3" height="1" fill="currentColor"/>
+          <rect x="5" y="3" width="1" height="1" fill="currentColor"/>
+          <!-- Star body -->
+          <rect x="4" y="4" width="3" height="1" fill="currentColor"/>
+          <!-- Middle horizontal row (Eyes at x=4 and x=6 left transparent) -->
+          <rect x="1" y="5" width="3" height="1" fill="currentColor"/>
+          <rect x="5" y="5" width="1" height="1" fill="currentColor"/>
+          <rect x="7" y="5" width="3" height="1" fill="currentColor"/>
+          <!-- Star body -->
+          <rect x="4" y="6" width="3" height="1" fill="currentColor"/>
+          <!-- Bottom vertical spike -->
+          <rect x="5" y="7" width="1" height="1" fill="currentColor"/>
           <rect x="5" y="8" width="1" height="1" fill="currentColor"/>
           <rect x="5" y="9" width="1" height="1" fill="currentColor"/>
           <rect x="5" y="10" width="1" height="1" fill="currentColor"/>
