@@ -47,8 +47,7 @@
 
 #ai-usage-monitor-widget:hover {
   opacity: 1;
-  box-shadow: 4px 4px 0px var(--theme-retro-color), 
-              0 0 10px var(--theme-retro-glow),
+  box-shadow: 4px 4px 0px #000000, 
               inset -3px -3px 0px rgba(0, 0, 0, 0.4), 
               inset 3px 3px 0px rgba(255, 255, 255, 0.1) !important;
 }
@@ -64,8 +63,7 @@
   align-items: center !important;
   justify-content: center !important;
   overflow: visible !important;
-  box-shadow: 4px 4px 0px var(--theme-retro-color), 
-              0 0 6px var(--theme-retro-glow),
+  box-shadow: 4px 4px 0px #000000, 
               inset -3px -3px 0px rgba(0, 0, 0, 0.4), 
               inset 3px 3px 0px rgba(255, 255, 255, 0.1) !important;
 }
@@ -271,26 +269,29 @@
 .aim-collapsed-battery {
   display: flex !important;
   align-items: center !important;
-  width: 32px !important;
-  height: 12px !important;
+  width: 36px !important;
+  height: 15px !important;
   position: relative !important;
-  margin-bottom: 2px !important;
+  margin-bottom: 4px !important;
 }
 
 .aim-collapsed-battery-body {
   flex-grow: 1 !important;
   height: 100% !important;
-  background: #27272A !important;
-  border: 2px solid #000000 !important;
+  background: #18181B !important;
+  border: 2px solid #8E9196 !important;
+  border-radius: 4px !important;
   box-sizing: border-box !important;
   position: relative !important;
   display: flex !important;
   align-items: center !important;
+  padding: 1px !important;
 }
 
 .aim-collapsed-battery-level {
   height: 100% !important;
   width: 100%;
+  border-radius: 1px !important;
   background-color: var(--theme-retro-color) !important;
   transition: width 0.3s steps(5, end) !important;
 }
@@ -310,11 +311,11 @@
 
 .aim-collapsed-battery-cap {
   width: 2px !important;
-  height: 6px !important;
-  background: #000000 !important;
-  border: 2px solid #000000 !important;
-  border-left: none !important;
+  height: 5px !important;
+  background: #8E9196 !important;
+  border-radius: 0 2px 2px 0 !important;
   flex-shrink: 0 !important;
+  margin-left: 1px !important;
 }
 
 /* Custom Pixel Art SVG Container */

@@ -85,27 +85,42 @@
         </svg>
       `;
     } else if (srv === 'gemini') {
-      // 11x11 Grid Gemini Sparkle Character (Concave Astroid) with eyes (omitted rects at x=4, x=6)
+      // 11x11 Grid Gemini Sparkle Character with brand-gradient pixel colors and charcoal eyes
       return `
         <svg viewBox="0 0 11 11" class="aim-pixel-svg">
-          <!-- Top vertical spike -->
-          <rect x="5" y="0" width="1" height="1" fill="currentColor"/>
-          <rect x="5" y="1" width="1" height="1" fill="currentColor"/>
-          <rect x="5" y="2" width="1" height="1" fill="currentColor"/>
-          <rect x="5" y="3" width="1" height="1" fill="currentColor"/>
+          <!-- Top vertical spike (Purple to Blue gradient) -->
+          <rect x="5" y="0" width="1" height="1" fill="#A78BFA"/>
+          <rect x="5" y="1" width="1" height="1" fill="#8B5CF6"/>
+          <rect x="5" y="2" width="1" height="1" fill="#5F87FF"/>
+          <rect x="5" y="3" width="1" height="1" fill="#5F87FF"/>
+          
+          <!-- Star body (Electric Blue) -->
+          <rect x="4" y="4" width="3" height="1" fill="#5F87FF"/>
+          
+          <!-- Middle horizontal row (With eyes) -->
+          <!-- Left spike (Purple to Blue) -->
+          <rect x="1" y="5" width="1" height="1" fill="#A78BFA"/>
+          <rect x="2" y="5" width="1" height="1" fill="#8B5CF6"/>
+          <rect x="3" y="5" width="1" height="1" fill="#5F87FF"/>
+          <!-- Center -->
+          <rect x="5" y="5" width="1" height="1" fill="#5F87FF"/>
+          <!-- Right spike (Blue to Purple) -->
+          <rect x="7" y="5" width="1" height="1" fill="#5F87FF"/>
+          <rect x="8" y="5" width="1" height="1" fill="#8B5CF6"/>
+          <rect x="9" y="5" width="1" height="1" fill="#A78BFA"/>
+          
+          <!-- Eyes (Dark Charcoal) -->
+          <rect x="4" y="5" width="1" height="1" fill="#1F2937"/>
+          <rect x="6" y="5" width="1" height="1" fill="#1F2937"/>
+          
           <!-- Star body -->
-          <rect x="4" y="4" width="3" height="1" fill="currentColor"/>
-          <!-- Middle horizontal row (Eyes at x=4 and x=6 left transparent) -->
-          <rect x="1" y="5" width="3" height="1" fill="currentColor"/>
-          <rect x="5" y="5" width="1" height="1" fill="currentColor"/>
-          <rect x="7" y="5" width="3" height="1" fill="currentColor"/>
-          <!-- Star body -->
-          <rect x="4" y="6" width="3" height="1" fill="currentColor"/>
-          <!-- Bottom vertical spike -->
-          <rect x="5" y="7" width="1" height="1" fill="currentColor"/>
-          <rect x="5" y="8" width="1" height="1" fill="currentColor"/>
-          <rect x="5" y="9" width="1" height="1" fill="currentColor"/>
-          <rect x="5" y="10" width="1" height="1" fill="currentColor"/>
+          <rect x="4" y="6" width="3" height="1" fill="#5F87FF"/>
+          
+          <!-- Bottom vertical spike (Blue to Purple) -->
+          <rect x="5" y="7" width="1" height="1" fill="#5F87FF"/>
+          <rect x="5" y="8" width="1" height="1" fill="#5F87FF"/>
+          <rect x="5" y="9" width="1" height="1" fill="#8B5CF6"/>
+          <rect x="5" y="10" width="1" height="1" fill="#A78BFA"/>
         </svg>
       `;
     } else {
