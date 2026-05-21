@@ -54,7 +54,7 @@ async function renderDashboard() {
     'claude_logs', 'claude_limit', 'claude_window',
     'gemini_logs', 'gemini_limit', 'gemini_window',
     'aistudio_logs', 'aistudio_limit', 'aistudio_window',
-    'display_mode', 'default_display_mode'
+    'display_mode', 'default_display_mode', 'claude_reset_time', 'claude_session_reset'
   ]);
 
   displayMode = data.display_mode || data.default_display_mode || 'count';
@@ -120,25 +120,28 @@ async function renderDashboard() {
     // 3. Update next decay countdown info
     const decayInfoEl = document.getElementById(`${s}-decay-info`);
     if (decayInfoEl) {
-      if (activeLogs.length > 0) {
-        const oldestActive = Math.min(...activeLogs);
-        const releaseTime = oldestActive + windowMs;
-        const diffMs = releaseTime - now;
+      const storedResetTime = s === 'claude'
+        ? (data.claude_reset_time || data.claude_session_reset)
+        : null;
+      const calcResetTime = activeLogs.length > 0 ? Math.min(...activeLogs) + windowMs : null;
+      const resetTimestamp = storedResetTime || calcResetTime;
 
+      if (resetTimestamp) {
+        const diffMs = resetTimestamp - now;
         if (diffMs > 0) {
-          const diffMins = Math.ceil(diffMs / 1000 / 60);
-          if (diffMins >= 60) {
-            const hrs = Math.floor(diffMins / 60);
-            const mins = diffMins % 60;
-            decayInfoEl.innerText = `枠解放: 約 ${hrs}時間 ${mins}分後`;
-          } else {
-            decayInfoEl.innerText = `枠解放: 約 ${diffMins}分後`;
-          }
+          const resetDate = new Date(resetTimestamp);
+          const h = String(resetDate.getHours()).padStart(2, '0');
+          const m = String(resetDate.getMinutes()).padStart(2, '0');
+          decayInfoEl.innerText = `充電完了: ${h}:${m}`;
         } else {
-          decayInfoEl.innerText = '枠解放: 処理中...';
+          if (storedResetTime) {
+            storageUpdates['claude_reset_time'] = null;
+            await chrome.storage.local.remove('claude_reset_time');
+          }
+          decayInfoEl.innerText = '全回復中';
         }
       } else {
-        decayInfoEl.innerText = '全枠が空いています';
+        decayInfoEl.innerText = '全回復中';
       }
     }
   }
@@ -235,19 +238,25 @@ async function deleteHistoryEntry(service, index) {
 // Adjust count manually (+1 or -1 button on cards)
 async function adjustCount(service, delta) {
   const logKey = `${service}_logs`;
-  const data = await chrome.storage.local.get(logKey);
+  const windowKey = `${service}_window`;
+  const data = await chrome.storage.local.get([logKey, windowKey, 'claude_session_reset']);
   const currentLogs = data[logKey] || [];
+  const windowMs = data[windowKey] || (service === 'claude' ? 5 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000);
+  const now = Date.now();
+
+  const updates = { [logKey]: currentLogs };
 
   if (delta > 0) {
-    currentLogs.push(Date.now());
+    const activeBefore = currentLogs.filter(t => now - t < windowMs);
+    currentLogs.push(now);
+    if (service === 'claude' && (activeBefore.length === 0 || !data.claude_session_reset || data.claude_session_reset <= now)) {
+      updates.claude_session_reset = now + windowMs;
+    }
   } else if (delta < 0 && currentLogs.length > 0) {
     currentLogs.pop();
   }
 
-  const updates = {};
-  updates[logKey] = currentLogs;
   await chrome.storage.local.set(updates);
-
   await renderDashboard();
 }
 
@@ -332,7 +341,7 @@ function setupEventListeners() {
       'claude_limit', 'claude_window', 'claude_logs',
       'gemini_limit', 'gemini_window', 'gemini_logs',
       'aistudio_limit', 'aistudio_window', 'aistudio_logs',
-      'default_display_mode'
+      'default_display_mode', 'claude_reset_time'
     ]);
 
     const now = Date.now();
@@ -362,6 +371,22 @@ function setupEventListeners() {
 
     // General display mode default
     document.getElementById('input-default-display-mode').value = data.default_display_mode || DEFAULT_SETTINGS.default_display_mode;
+
+    // Claude reset time: show remaining minutes if stored, else blank
+    const resetMinsInput = document.getElementById('input-claude-reset-mins');
+    const detectedLabel = document.getElementById('aim-detected-reset-label');
+    const claudeResetTime = data.claude_reset_time;
+    if (claudeResetTime && claudeResetTime > now) {
+      const remainingMins = Math.ceil((claudeResetTime - now) / 60000);
+      resetMinsInput.value = remainingMins;
+      const resetDate = new Date(claudeResetTime);
+      const h = String(resetDate.getHours()).padStart(2, '0');
+      const m = String(resetDate.getMinutes()).padStart(2, '0');
+      detectedLabel.innerText = ` → ${h}:${m}`;
+    } else {
+      resetMinsInput.value = '';
+      detectedLabel.innerText = '';
+    }
 
     settingsModal.classList.remove('hidden');
   });
@@ -411,6 +436,16 @@ function setupEventListeners() {
     if (!existingMode.display_mode) {
       displayMode = defaultDisplayMode;
       await chrome.storage.local.set({ display_mode: displayMode });
+    }
+
+    // Handle reset time: 0 = clear, positive = set from now + minutes
+    const resetMinsVal = parseInt(document.getElementById('input-claude-reset-mins').value);
+    if (!isNaN(resetMinsVal)) {
+      if (resetMinsVal > 0) {
+        await chrome.storage.local.set({ claude_reset_time: Date.now() + resetMinsVal * 60 * 1000 });
+      } else {
+        await chrome.storage.local.remove('claude_reset_time');
+      }
     }
 
     settingsModal.classList.add('hidden');

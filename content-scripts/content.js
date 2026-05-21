@@ -21,13 +21,21 @@
     serviceLetter = 'A';
   }
 
-  // Abort if not running on a supported domain
-  if (!service) return;
+  const isPassiveMode = !service;
+  if (isPassiveMode) {
+    service = 'claude';
+    serviceName = 'Claude Pro';
+    serviceLetter = 'C';
+  }
 
-  const DEBOUNCE_TIME = 1500; // ms to prevent duplicate logs on rapid clicks/enters
+  // Scoped keys vary by mode to avoid position/state conflicts
+  const collapseKey = isPassiveMode ? 'passive_widget_collapsed' : `${service}_widget_collapsed`;
+  const posKey = isPassiveMode ? 'passive_widget_pos' : `${service}_widget_pos`;
+
+  const DEBOUNCE_TIME = 1500;
   let lastLoggedTime = 0;
   let isCollapsed = false;
-  let displayMode = 'count'; // 'count' or 'percent'
+  let displayMode = 'count';
 
   // Initialize and inject the UI
   initWidget();
@@ -147,10 +155,18 @@
   async function initWidget() {
     if (document.getElementById('ai-usage-monitor-widget')) return;
 
+    // Inject fetch interceptor into page context (claude.ai only)
+    if (!isPassiveMode && service === 'claude') {
+      const s = document.createElement('script');
+      s.src = chrome.runtime.getURL('content-scripts/inject.js');
+      s.onload = () => s.remove();
+      (document.head || document.documentElement).appendChild(s);
+    }
+
     // Load initial collapse and display mode states from storage
-    const collapseKey = `${service}_widget_collapsed`;
     const data = await chrome.storage.local.get([collapseKey, 'display_mode', 'default_display_mode']);
-    isCollapsed = !!data[collapseKey];
+    // Passive mode defaults to collapsed; AI service pages respect saved state
+    isCollapsed = data[collapseKey] !== undefined ? !!data[collapseKey] : isPassiveMode;
     displayMode = data.display_mode || data.default_display_mode || 'count';
 
     const widget = document.createElement('div');
@@ -268,6 +284,9 @@
 
     // Periodically update the widget (decay countdowns)
     setInterval(renderWidget, 10000);
+
+    // Start watching Claude's DOM for server-side reset time
+    startResetTimeDetector();
   }
 
   // Toggle Display Mode
@@ -280,7 +299,6 @@
   // Toggle Collapse State
   async function toggleCollapse(widget) {
     isCollapsed = !isCollapsed;
-    const collapseKey = `${service}_widget_collapsed`;
     const updates = {};
     updates[collapseKey] = isCollapsed;
     await chrome.storage.local.set(updates);
@@ -306,107 +324,62 @@
     await renderWidget();
   }
 
+  // Detect Claude's server-side reset time from the "プラン使用制限" UI text
+  function startResetTimeDetector() {
+    if (isPassiveMode || service !== 'claude') return;
+
+    let detectTimeout;
+
+    function detectResetTime() {
+      const bodyText = document.body?.innerText || '';
+      const now = Date.now();
+      let resetTime = null;
+
+      const hourMinMatch = bodyText.match(/(\d+)時間(\d+)分後にリセット/);
+      const hourMatch = bodyText.match(/(\d+)時間後にリセット/);
+      const minMatch = bodyText.match(/(\d+)分後にリセット/);
+
+      if (hourMinMatch) {
+        resetTime = now + (parseInt(hourMinMatch[1]) * 60 + parseInt(hourMinMatch[2])) * 60 * 1000;
+      } else if (hourMatch) {
+        resetTime = now + parseInt(hourMatch[1]) * 60 * 60 * 1000;
+      } else if (minMatch) {
+        resetTime = now + parseInt(minMatch[1]) * 60 * 1000;
+      }
+
+      if (resetTime) {
+        chrome.storage.local.get('claude_reset_time', (existing) => {
+          // Only update if meaningfully different (> 2 minute gap) to avoid constant writes
+          if (!existing.claude_reset_time || Math.abs(existing.claude_reset_time - resetTime) > 2 * 60 * 1000) {
+            chrome.storage.local.set({ claude_reset_time: resetTime });
+          }
+        });
+      }
+    }
+
+    const observer = new MutationObserver(() => {
+      clearTimeout(detectTimeout);
+      detectTimeout = setTimeout(detectResetTime, 500);
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    detectResetTime();
+  }
+
   // Setup Event Listeners
   function setupEventListeners() {
-    // 1. Click Listener (For Send Buttons)
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('button, [role="button"], .send-button, [aria-label*="send" i], [aria-label*="送信" i]');
-      if (!btn) return;
+    // Message listener from inject.js (fetch interception in page context)
+    window.addEventListener('message', (event) => {
+      if (event.source !== window) return;
+      const data = event.data;
+      if (!data || !data.__aiUsageMonitor || data.type !== 'message_sent') return;
+      triggerMessageLogged();
+    });
 
-      const ariaLabel = (btn.getAttribute('aria-label') || '').toLowerCase();
-      const title = (btn.getAttribute('title') || '').toLowerCase();
-      const btnText = btn.innerText.toLowerCase().trim();
-      const innerHTML = btn.innerHTML.toLowerCase();
-
-      const isAttachment = ariaLabel.includes('attach') || 
-                           ariaLabel.includes('upload') ||
-                           ariaLabel.includes('file') ||
-                           ariaLabel.includes('添付') ||
-                           title.includes('attach') ||
-                           title.includes('upload') ||
-                           title.includes('file');
-
-      if (isAttachment) return;
-
-      let isSendButton = false;
-
-      const hasSendKeywords = ariaLabel.includes('send') || 
-                              ariaLabel.includes('submit') ||
-                              ariaLabel.includes('送信') ||
-                              ariaLabel.includes('実行') ||
-                              title.includes('send') ||
-                              title.includes('送信') ||
-                              btnText.includes('run') ||
-                              btnText.includes('send');
-
-      const hasSendSvg = innerHTML.includes('arrow') || 
-                         innerHTML.includes('send') || 
-                         innerHTML.includes('airplane') || 
-                         innerHTML.includes('paper-plane') ||
-                         innerHTML.includes('polygon') || 
-                         btn.querySelector('svg');
-
-      if (service === 'claude') {
-        isSendButton = hasSendKeywords || 
-                       (btn.closest('[class*="chatInput"]') && hasSendSvg) ||
-                       btn.querySelector('rect') || 
-                       btn.querySelector('path[d*="M"]') && btn.closest('[class*="relative"]'); 
-      } else if (service === 'gemini') {
-        isSendButton = hasSendKeywords || 
-                       btn.classList.contains('send-button') ||
-                       (btn.closest('.input-area-container') && hasSendSvg);
-      } else if (service === 'aistudio') {
-        isSendButton = hasSendKeywords || 
-                       btnText.includes('run') || 
-                       btn.classList.contains('run-button') ||
-                       btn.id === 'run-button';
-      }
-
-      if (!isSendButton && btn.closest('[class*="input"]') && btn.querySelector('svg')) {
-        isSendButton = true;
-      }
-
-      if (isSendButton) {
-        triggerMessageLogged();
-      }
-    }, true);
-
-    // 2. Keydown Listener
-    document.addEventListener('keydown', (e) => {
-      if (e.isComposing) return;
-
-      const activeEl = document.activeElement;
-      if (!activeEl) return;
-
-      const isEditable = activeEl.tagName === 'TEXTAREA' || 
-                         activeEl.tagName === 'INPUT' ||
-                         activeEl.contentEditable === 'true' ||
-                         activeEl.contentEditable === 'plaintext-only' ||
-                         activeEl.closest('[contenteditable="true"]') ||
-                         activeEl.closest('[contenteditable="plaintext-only"]') ||
-                         activeEl.getAttribute('role') === 'textbox';
-
-      if (!isEditable) return;
-
-      if (service === 'aistudio') {
-        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-          triggerMessageLogged();
-        }
-      } else {
-        if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
-          const text = activeEl.innerText || activeEl.value || '';
-          if (text.trim().length > 0) {
-            triggerMessageLogged();
-          }
-        }
-      }
-    }, true);
-
-    // 3. Storage Change Listener
+    // Storage change listener (always active, including passive mode)
     chrome.storage.onChanged.addListener((changes) => {
       const relevantKeys = [
-        `${service}_logs`, 
-        `${service}_limit`, 
+        `${service}_logs`,
+        `${service}_limit`,
         `${service}_window`,
         `display_mode`,
         `default_display_mode`
@@ -438,33 +411,46 @@
 
   async function logMessageSend() {
     const logKey = `${service}_logs`;
-    const data = await chrome.storage.local.get(logKey);
+    const windowKey = `${service}_window`;
+    const data = await chrome.storage.local.get([logKey, windowKey, 'claude_session_reset']);
     const currentLogs = data[logKey] || [];
-    
-    currentLogs.push(Date.now());
-    
-    const updates = {};
-    updates[logKey] = currentLogs;
+    const windowMs = data[windowKey] || (service === 'claude' ? 5 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000);
+    const now = Date.now();
+
+    const activeBefore = currentLogs.filter(t => now - t < windowMs);
+    currentLogs.push(now);
+
+    const updates = { [logKey]: currentLogs };
+    // Record session reset time when starting a fresh session (fallback for when DOM detection isn't available)
+    if (service === 'claude' && (activeBefore.length === 0 || !data.claude_session_reset || data.claude_session_reset <= now)) {
+      updates.claude_session_reset = now + windowMs;
+    }
+
     await chrome.storage.local.set(updates);
-    
     await renderWidget();
   }
 
   async function adjustCount(delta) {
     const logKey = `${service}_logs`;
-    const data = await chrome.storage.local.get(logKey);
+    const windowKey = `${service}_window`;
+    const data = await chrome.storage.local.get([logKey, windowKey, 'claude_session_reset']);
     const currentLogs = data[logKey] || [];
+    const windowMs = data[windowKey] || (service === 'claude' ? 5 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000);
+    const now = Date.now();
+
+    const updates = { [logKey]: currentLogs };
 
     if (delta > 0) {
-      currentLogs.push(Date.now());
+      const activeBefore = currentLogs.filter(t => now - t < windowMs);
+      currentLogs.push(now);
+      if (service === 'claude' && (activeBefore.length === 0 || !data.claude_session_reset || data.claude_session_reset <= now)) {
+        updates.claude_session_reset = now + windowMs;
+      }
     } else if (delta < 0 && currentLogs.length > 0) {
       currentLogs.pop();
     }
 
-    const updates = {};
-    updates[logKey] = currentLogs;
     await chrome.storage.local.set(updates);
-
     await renderWidget();
   }
 
@@ -474,7 +460,7 @@
     const limitKey = `${service}_limit`;
     const windowKey = `${service}_window`;
 
-    const data = await chrome.storage.local.get([logKey, limitKey, windowKey, 'display_mode', 'default_display_mode']);
+    const data = await chrome.storage.local.get([logKey, limitKey, windowKey, 'display_mode', 'default_display_mode', 'claude_reset_time', 'claude_session_reset']);
     
     const logs = data[logKey] || [];
     const limit = data[limitKey] || (service === 'claude' ? 45 : 50);
@@ -523,25 +509,26 @@
     }
 
     if (decayText) {
-      if (activeLogs.length > 0) {
-        const oldestActive = Math.min(...activeLogs);
-        const releaseTime = oldestActive + windowMs;
-        const diffMs = releaseTime - now;
+      // Priority: DOM-detected (most accurate) > session-start calculated > active-log calculated
+      const storedResetTime = service === 'claude'
+        ? (data.claude_reset_time || data.claude_session_reset)
+        : null;
+      const calcResetTime = activeLogs.length > 0 ? Math.min(...activeLogs) + windowMs : null;
+      const resetTimestamp = storedResetTime || calcResetTime;
 
+      if (resetTimestamp) {
+        const diffMs = resetTimestamp - now;
         if (diffMs > 0) {
-          const diffMins = Math.ceil(diffMs / 1000 / 60);
-          if (diffMins >= 60) {
-            const hours = Math.floor(diffMins / 60);
-            const mins = diffMins % 60;
-            decayText.innerText = `Next: ${hours}h ${mins}m`;
-          } else {
-            decayText.innerText = `Next: ${diffMins}m`;
-          }
+          const resetDate = new Date(resetTimestamp);
+          const h = String(resetDate.getHours()).padStart(2, '0');
+          const m = String(resetDate.getMinutes()).padStart(2, '0');
+          decayText.innerText = `充電完了: ${h}:${m}`;
         } else {
-          decayText.innerText = 'Next: --';
+          if (storedResetTime) chrome.storage.local.remove('claude_reset_time');
+          decayText.innerText = '全回復中';
         }
       } else {
-        decayText.innerText = 'All slots free';
+        decayText.innerText = '全回復中';
       }
     }
 
@@ -663,7 +650,6 @@
       document.ontouchend = null;
       document.ontouchmove = null;
 
-      const posKey = `${service}_widget_pos`;
       const posData = {
         top: elmnt.style.top,
         left: elmnt.style.left
@@ -676,7 +662,6 @@
   }
 
   async function applySavedPosition(elmnt) {
-    const posKey = `${service}_widget_pos`;
     const data = await chrome.storage.local.get(posKey);
     const pos = data[posKey];
 

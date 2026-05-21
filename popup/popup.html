@@ -180,6 +180,12 @@
                 <input type="number" id="input-claude-current-count" min="0" max="500" placeholder="現在の回数">
               </div>
             </div>
+            <div class="aim-input-row">
+              <div class="aim-input-field flex-wide">
+                <label for="input-claude-reset-mins" title="Claudeの「プラン使用制限」に表示される残り分数を入力。0を入力するとリセット時刻をクリアします。">リセットまでの残り分数（手動同期）<span id="aim-detected-reset-label" class="aim-detected-label"></span></label>
+                <input type="number" id="input-claude-reset-mins" min="0" max="300" placeholder="例: 13">
+              </div>
+            </div>
           </div>
 
           <!-- Gemini limits -->

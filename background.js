@@ -85,6 +85,12 @@ async function decayLogs() {
     await chrome.storage.local.set(updates);
     await updateBadge();
   }
+
+  // Clear session reset time once it has passed
+  const sessionData = await chrome.storage.local.get('claude_session_reset');
+  if (sessionData.claude_session_reset && now >= sessionData.claude_session_reset) {
+    await chrome.storage.local.remove('claude_session_reset');
+  }
 }
 
 // Dynamically updates the extension badge (color & text) to show usage

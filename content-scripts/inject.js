@@ -1,39 +1,42 @@
-// 1. inject.js をページコンテキストに注入
-const s = document.createElement("script");
-s.src = chrome.runtime.getURL("content-scripts/inject.js");
-s.onload = () => s.remove();
-(document.head || document.documentElement).appendChild(s);
+// Runs in PAGE context (injected by content.js) to intercept Claude API calls
+(function () {
+  'use strict';
 
-// 2. 検知メッセージを受信
-let lastDetected = 0;
-window.addEventListener("message", (event) => {
-  if (event.source !== window) return;
-  const data = event.data;
-  if (!data || !data.__aiUsageMonitor) return;
+  const originalFetch = window.fetch;
+  window.fetch = async function (...args) {
+    const req = args[0];
+    const opts = args[1] || {};
+    const url = typeof req === 'string' ? req : (req?.url || '');
+    const method = (opts.method || req?.method || 'GET').toUpperCase();
 
-  // 200ms以内の重複は無視（fetch/XHR両方が走った場合の保険）
-  if (Date.now() - lastDetected < 200) return;
-  lastDetected = Date.now();
+    const response = await originalFetch.apply(this, args);
 
-  // ここで既存のカウントアップ処理を呼ぶ
-  incrementUsage(data.service);
-}); // 1. inject.js をページコンテキストに注入
-const s = document.createElement("script");
-s.src = chrome.runtime.getURL("content-scripts/inject.js");
-s.onload = () => s.remove();
-(document.head || document.documentElement).appendChild(s);
+    if (method === 'POST' && /\/api\/[^?#]*\/completion/.test(url) && response.ok) {
+      window.postMessage({ __aiUsageMonitor: true, type: 'message_sent', service: 'claude' }, '*');
+    }
 
-// 2. 検知メッセージを受信
-let lastDetected = 0;
-window.addEventListener("message", (event) => {
-  if (event.source !== window) return;
-  const data = event.data;
-  if (!data || !data.__aiUsageMonitor) return;
+    return response;
+  };
 
-  // 200ms以内の重複は無視（fetch/XHR両方が走った場合の保険）
-  if (Date.now() - lastDetected < 200) return;
-  lastDetected = Date.now();
+  // XHR fallback
+  const XHR = XMLHttpRequest.prototype;
+  const origOpen = XHR.open;
+  const origSend = XHR.send;
 
-  // ここで既存のカウントアップ処理を呼ぶ
-  incrementUsage(data.service);
-});
+  XHR.open = function (method, url) {
+    this._aimMethod = method;
+    this._aimUrl = url;
+    return origOpen.apply(this, arguments);
+  };
+
+  XHR.send = function () {
+    if (this._aimMethod?.toUpperCase() === 'POST' && /\/api\/[^?#]*\/completion/.test(this._aimUrl || '')) {
+      this.addEventListener('load', function () {
+        if (this.status === 200) {
+          window.postMessage({ __aiUsageMonitor: true, type: 'message_sent', service: 'claude' }, '*');
+        }
+      });
+    }
+    return origSend.apply(this, arguments);
+  };
+})();
