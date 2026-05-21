@@ -3,16 +3,23 @@
   "name": "AI Usage Monitor",
   "version": "1.0.0",
   "description": "Tracks and visualizes Claude Pro and Gemini usage limits in real-time.",
-  "permissions": [
-    "storage",
-    "alarms"
-  ],
+  "permissions": ["storage", "alarms"],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
     "default_popup": "popup/popup.html"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["content-scripts/inject.js"],
+      "matches": [
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://aistudio.google.com/*"
+      ]
+    }
+  ],
   "content_scripts": [
     {
       "matches": [
@@ -20,12 +27,8 @@
         "*://gemini.google.com/*",
         "*://aistudio.google.com/*"
       ],
-      "js": [
-        "content-scripts/content.js"
-      ],
-      "css": [
-        "content-scripts/widget.css"
-      ],
+      "js": ["content-scripts/content.js"],
+      "css": ["content-scripts/widget.css"],
       "run_at": "document_end"
     }
   ]
