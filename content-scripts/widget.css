@@ -131,6 +131,9 @@
 .aim-badge-aistudio {
   background: #D97706 !important; /* AI Studio Amber */
 }
+.aim-badge-codex {
+  background: #047857 !important; /* Codex Green */
+}
 
 .aim-count-display {
   font-size: 8px !important;

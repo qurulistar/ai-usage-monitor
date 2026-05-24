@@ -5,12 +5,16 @@ const DEFAULT_SETTINGS = {
   claude_logs: [],
 
   gemini_limit: 50,
-  gemini_window: 3 * 60 * 60 * 1000, // 3 hours in ms
+  gemini_window: 5 * 60 * 60 * 1000, // 5 hours in ms
   gemini_logs: [],
 
   aistudio_limit: 50,
-  aistudio_window: 3 * 60 * 60 * 1000, // 3 hours in ms
-  aistudio_logs: []
+  aistudio_window: 5 * 60 * 60 * 1000, // 5 hours in ms
+  aistudio_logs: [],
+
+  codex_limit: 25,
+  codex_window: 5 * 60 * 60 * 1000, // 5 hours in ms
+  codex_logs: []
 };
 
 // Initialize settings on installation
@@ -22,6 +26,16 @@ chrome.runtime.onInstalled.addListener(async () => {
     if (current[key] === undefined) {
       updates[key] = val;
     }
+  }
+
+  // Migrate old 3-hour defaults to the requested 5-hour rolling windows without
+  // overwriting custom values.
+  const oldThreeHourWindow = 3 * 60 * 60 * 1000;
+  if (current.gemini_window === oldThreeHourWindow) {
+    updates.gemini_window = DEFAULT_SETTINGS.gemini_window;
+  }
+  if (current.aistudio_window === oldThreeHourWindow) {
+    updates.aistudio_window = DEFAULT_SETTINGS.aistudio_window;
   }
 
   if (Object.keys(updates).length > 0) {
@@ -45,8 +59,9 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 // Update the badge when storage changes (e.g. message added or settings changed)
 chrome.storage.onChanged.addListener(async (changes) => {
   const keys = [
-    'claude_logs', 'gemini_logs', 'aistudio_logs', 
-    'claude_limit', 'gemini_limit', 'aistudio_limit',
+    'claude_logs', 'gemini_logs', 'aistudio_logs', 'codex_logs',
+    'claude_limit', 'gemini_limit', 'aistudio_limit', 'codex_limit',
+    'claude_window', 'gemini_window', 'aistudio_window', 'codex_window',
     'display_mode'
   ];
   const hasRelevantChanges = Object.keys(changes).some(key => keys.includes(key));
@@ -60,14 +75,15 @@ async function decayLogs() {
   const data = await chrome.storage.local.get([
     'claude_logs', 'claude_window',
     'gemini_logs', 'gemini_window',
-    'aistudio_logs', 'aistudio_window'
+    'aistudio_logs', 'aistudio_window',
+    'codex_logs', 'codex_window'
   ]);
 
   const now = Date.now();
   let changed = false;
   const updates = {};
 
-  const services = ['claude', 'gemini', 'aistudio'];
+  const services = ['claude', 'gemini', 'aistudio', 'codex'];
   for (const service of services) {
     const logs = data[`${service}_logs`] || [];
     const windowMs = data[`${service}_window`] || DEFAULT_SETTINGS[`${service}_window`];
@@ -96,27 +112,32 @@ async function decayLogs() {
 // Dynamically updates the extension badge (color & text) to show usage
 async function updateBadge() {
   const data = await chrome.storage.local.get([
-    'claude_logs', 'claude_limit',
-    'gemini_logs', 'gemini_limit',
-    'aistudio_logs', 'aistudio_limit',
+    'claude_logs', 'claude_limit', 'claude_window',
+    'gemini_logs', 'gemini_limit', 'gemini_window',
+    'aistudio_logs', 'aistudio_limit', 'aistudio_window',
+    'codex_logs', 'codex_limit', 'codex_window',
     'display_mode'
   ]);
 
   const displayMode = data.display_mode || 'count';
 
   const services = [
-    { key: 'claude', name: 'Claude', prefix: 'C', logs: data.claude_logs || [], limit: data.claude_limit || 45 },
-    { key: 'gemini', name: 'Gemini', prefix: 'G', logs: data.gemini_logs || [], limit: data.gemini_limit || 50 },
-    { key: 'aistudio', name: 'AIStudio', prefix: 'A', logs: data.aistudio_logs || [], limit: data.aistudio_limit || 50 }
+    { key: 'claude', name: 'Claude', prefix: 'C', logs: data.claude_logs || [], limit: data.claude_limit || 45, windowMs: data.claude_window || DEFAULT_SETTINGS.claude_window },
+    { key: 'gemini', name: 'Gemini', prefix: 'G', logs: data.gemini_logs || [], limit: data.gemini_limit || 50, windowMs: data.gemini_window || DEFAULT_SETTINGS.gemini_window },
+    { key: 'aistudio', name: 'AIStudio', prefix: 'A', logs: data.aistudio_logs || [], limit: data.aistudio_limit || 50, windowMs: data.aistudio_window || DEFAULT_SETTINGS.aistudio_window },
+    { key: 'codex', name: 'Codex', prefix: 'X', logs: data.codex_logs || [], limit: data.codex_limit || 25, windowMs: data.codex_window || DEFAULT_SETTINGS.codex_window }
   ];
 
   let maxUsageRatio = -1;
   let activeService = null;
 
+  const now = Date.now();
+
   // Determine which service is closest to its limit (highest usage percentage)
   for (const s of services) {
-    const ratio = s.logs.length / s.limit;
-    if (s.logs.length > 0 && ratio > maxUsageRatio) {
+    s.activeLogs = s.logs.filter(timestamp => now - timestamp < s.windowMs);
+    const ratio = s.activeLogs.length / Math.max(1, s.limit);
+    if (s.activeLogs.length > 0 && ratio > maxUsageRatio) {
       maxUsageRatio = ratio;
       activeService = s;
     }
@@ -128,18 +149,18 @@ async function updateBadge() {
     return;
   }
 
-  const count = activeService.logs.length;
+  const count = activeService.activeLogs.length;
   let badgeText = '';
 
   if (displayMode === 'percent') {
-    const percentage = Math.min((count / activeService.limit) * 100, 100);
-    const roundedPercent = Math.round(percentage);
+    const usagePercentage = Math.min((count / Math.max(1, activeService.limit)) * 100, 100);
+    const remainingPercent = Math.round(Math.max(0, 100 - usagePercentage));
     
-    // Fit within Chrome's 4-character badge limit (e.g. "C6%", "C99%", "C100")
-    if (roundedPercent >= 100) {
+    // Fit within Chrome's 4-character badge limit (e.g., "C6%", "C99%", "C100")
+    if (remainingPercent >= 100) {
       badgeText = `${activeService.prefix}100`;
     } else {
-      badgeText = `${activeService.prefix}${roundedPercent}%`;
+      badgeText = `${activeService.prefix}${remainingPercent}%`;
     }
   } else {
     // Set badge text to raw count (e.g., C12, G5, A20)

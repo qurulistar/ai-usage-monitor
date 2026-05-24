@@ -1,32 +1,55 @@
 // AI Usage Monitor - Content Script
 
 (function () {
+  const SERVICE_CONFIG = {
+    claude: {
+      name: 'Claude Pro',
+      letter: 'C',
+      defaultLimit: 45,
+      defaultWindow: 5 * 60 * 60 * 1000
+    },
+    gemini: {
+      name: 'Gemini',
+      letter: 'G',
+      defaultLimit: 50,
+      defaultWindow: 5 * 60 * 60 * 1000
+    },
+    aistudio: {
+      name: 'AI Studio',
+      letter: 'A',
+      defaultLimit: 50,
+      defaultWindow: 5 * 60 * 60 * 1000
+    },
+    codex: {
+      name: 'Codex',
+      letter: 'X',
+      defaultLimit: 25,
+      defaultWindow: 5 * 60 * 60 * 1000
+    }
+  };
+
   // Determine active service based on URL
   const hostname = window.location.hostname;
   let service = '';
-  let serviceName = '';
-  let serviceLetter = '';
 
   if (hostname.includes('claude.ai')) {
     service = 'claude';
-    serviceName = 'Claude Pro';
-    serviceLetter = 'C';
   } else if (hostname.includes('gemini.google.com')) {
     service = 'gemini';
-    serviceName = 'Gemini';
-    serviceLetter = 'G';
   } else if (hostname.includes('aistudio.google.com')) {
     service = 'aistudio';
-    serviceName = 'AI Studio';
-    serviceLetter = 'A';
+  } else if (hostname.includes('chatgpt.com')) {
+    service = 'codex';
   }
 
   const isPassiveMode = !service;
   if (isPassiveMode) {
     service = 'claude';
-    serviceName = 'Claude Pro';
-    serviceLetter = 'C';
   }
+
+  const serviceConfig = SERVICE_CONFIG[service];
+  const serviceName = serviceConfig.name;
+  const serviceLetter = serviceConfig.letter;
 
   // Scoped keys vary by mode to avoid position/state conflicts
   const collapseKey = isPassiveMode ? 'passive_widget_collapsed' : `${service}_widget_collapsed`;
@@ -132,6 +155,40 @@
         </svg>
       `;
     } else {
+      if (srv === 'codex') {
+        return `
+          <svg viewBox="0 0 15 15" class="aim-pixel-svg aim-codex-svg">
+            <!-- White app tile inspired by the Codex dock icon -->
+            <rect x="2" y="0" width="11" height="1" fill="#F8FAFC"/>
+            <rect x="1" y="1" width="13" height="1" fill="#F8FAFC"/>
+            <rect x="0" y="2" width="15" height="11" fill="#F8FAFC"/>
+            <rect x="1" y="13" width="13" height="1" fill="#E5E7EB"/>
+            <rect x="2" y="14" width="11" height="1" fill="#CBD5E1"/>
+
+            <!-- Blue-purple hex/cloud body -->
+            <rect x="5" y="3" width="5" height="1" fill="#B7B7FF"/>
+            <rect x="3" y="4" width="9" height="1" fill="#9DA4FF"/>
+            <rect x="2" y="5" width="11" height="1" fill="#7C8DFF"/>
+            <rect x="2" y="6" width="11" height="1" fill="#6C7BFF"/>
+            <rect x="1" y="7" width="13" height="2" fill="#5869E8"/>
+            <rect x="2" y="9" width="11" height="1" fill="#4F5FD7"/>
+            <rect x="3" y="10" width="9" height="1" fill="#4B46C9"/>
+            <rect x="5" y="11" width="5" height="1" fill="#4338CA"/>
+
+            <!-- Soft highlight pixels -->
+            <rect x="4" y="4" width="2" height="1" fill="#D8D7FF"/>
+            <rect x="3" y="5" width="2" height="1" fill="#BFC4FF"/>
+            <rect x="10" y="5" width="1" height="1" fill="#A5B4FC"/>
+
+            <!-- Prompt mark -->
+            <rect x="4" y="6" width="1" height="1" fill="#FFFFFF"/>
+            <rect x="5" y="7" width="1" height="1" fill="#FFFFFF"/>
+            <rect x="4" y="8" width="1" height="1" fill="#FFFFFF"/>
+            <rect x="7" y="8" width="4" height="1" fill="#E0F2FE"/>
+          </svg>
+        `;
+      }
+
       // AI Studio / Other: 7x7 Grid Star Item
       return `
         <svg viewBox="0 0 7 7" class="aim-pixel-svg">
@@ -375,6 +432,114 @@
       triggerMessageLogged();
     });
 
+
+    // Click/keyboard fallback for services that do not have page-context fetch interception.
+    if (!isPassiveMode) {
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button, [role="button"], .send-button, [data-testid*="send" i], [aria-label*="send" i], [aria-label*="送信" i]');
+        if (!btn) return;
+
+        const ariaLabel = (btn.getAttribute('aria-label') || '').toLowerCase();
+        const title = (btn.getAttribute('title') || '').toLowerCase();
+        const btnText = btn.innerText.toLowerCase().trim();
+        const innerHTML = btn.innerHTML.toLowerCase();
+        const testId = (btn.getAttribute('data-testid') || '').toLowerCase();
+
+        const isAttachment = ariaLabel.includes('attach') ||
+                             ariaLabel.includes('upload') ||
+                             ariaLabel.includes('file') ||
+                             ariaLabel.includes('添付') ||
+                             title.includes('attach') ||
+                             title.includes('upload') ||
+                             title.includes('file');
+
+        if (isAttachment) return;
+
+        const hasSendKeywords = ariaLabel.includes('send') ||
+                                ariaLabel.includes('submit') ||
+                                ariaLabel.includes('送信') ||
+                                ariaLabel.includes('実行') ||
+                                title.includes('send') ||
+                                title.includes('送信') ||
+                                testId.includes('send') ||
+                                btnText.includes('run') ||
+                                btnText.includes('send');
+
+        const hasSendSvg = innerHTML.includes('arrow') ||
+                           innerHTML.includes('send') ||
+                           innerHTML.includes('airplane') ||
+                           innerHTML.includes('paper-plane') ||
+                           innerHTML.includes('polygon') ||
+                           btn.querySelector('svg');
+
+        let isSendButton = false;
+        if (service === 'claude') {
+          isSendButton = hasSendKeywords ||
+                         (btn.closest('[class*="chatInput"]') && hasSendSvg) ||
+                         btn.querySelector('rect') ||
+                         (btn.querySelector('path[d*="M"]') && btn.closest('[class*="relative"]'));
+        } else if (service === 'gemini') {
+          isSendButton = hasSendKeywords ||
+                         btn.classList.contains('send-button') ||
+                         (btn.closest('.input-area-container') && hasSendSvg);
+        } else if (service === 'aistudio') {
+          isSendButton = hasSendKeywords ||
+                         btnText.includes('run') ||
+                         btn.classList.contains('run-button') ||
+                         btn.id === 'run-button';
+        } else if (service === 'codex') {
+          isSendButton = hasSendKeywords ||
+                         testId.includes('send') ||
+                         testId.includes('composer') ||
+                         btnText.includes('start') ||
+                         btnText.includes('task') ||
+                         btnText.includes('code') ||
+                         ariaLabel.includes('start') ||
+                         ariaLabel.includes('task') ||
+                         ariaLabel.includes('codex') ||
+                         title.includes('start') ||
+                         title.includes('task') ||
+                         ((btn.closest('form') || btn.closest('[data-testid*="composer" i]')) && hasSendSvg);
+        }
+
+        if (!isSendButton && btn.closest('[class*="input"]') && btn.querySelector('svg')) {
+          isSendButton = true;
+        }
+
+        if (isSendButton) {
+          triggerMessageLogged();
+        }
+      }, true);
+
+      document.addEventListener('keydown', (e) => {
+        if (e.isComposing) return;
+
+        const activeEl = document.activeElement;
+        if (!activeEl) return;
+
+        const isEditable = activeEl.tagName === 'TEXTAREA' ||
+                           activeEl.tagName === 'INPUT' ||
+                           activeEl.contentEditable === 'true' ||
+                           activeEl.contentEditable === 'plaintext-only' ||
+                           activeEl.closest('[contenteditable="true"]') ||
+                           activeEl.closest('[contenteditable="plaintext-only"]') ||
+                           activeEl.getAttribute('role') === 'textbox';
+
+        if (!isEditable) return;
+
+        if (service === 'aistudio') {
+          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            triggerMessageLogged();
+          }
+        } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          const text = activeEl.innerText || activeEl.value || '';
+          if (text.trim().length > 0) {
+            triggerMessageLogged();
+          }
+        }
+      }, true);
+    }
+
     // Storage change listener (always active, including passive mode)
     chrome.storage.onChanged.addListener((changes) => {
       const relevantKeys = [
@@ -414,7 +579,7 @@
     const windowKey = `${service}_window`;
     const data = await chrome.storage.local.get([logKey, windowKey, 'claude_session_reset']);
     const currentLogs = data[logKey] || [];
-    const windowMs = data[windowKey] || (service === 'claude' ? 5 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000);
+    const windowMs = Number(data[windowKey] || serviceConfig.defaultWindow);
     const now = Date.now();
 
     const activeBefore = currentLogs.filter(t => now - t < windowMs);
@@ -435,7 +600,7 @@
     const windowKey = `${service}_window`;
     const data = await chrome.storage.local.get([logKey, windowKey, 'claude_session_reset']);
     const currentLogs = data[logKey] || [];
-    const windowMs = data[windowKey] || (service === 'claude' ? 5 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000);
+    const windowMs = Number(data[windowKey] || serviceConfig.defaultWindow);
     const now = Date.now();
 
     const updates = { [logKey]: currentLogs };
@@ -463,8 +628,8 @@
     const data = await chrome.storage.local.get([logKey, limitKey, windowKey, 'display_mode', 'default_display_mode', 'claude_reset_time', 'claude_session_reset']);
     
     const logs = data[logKey] || [];
-    const limit = data[limitKey] || (service === 'claude' ? 45 : 50);
-    const windowMs = data[windowKey] || (service === 'claude' ? 5 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000);
+    const limit = Math.max(1, Number(data[limitKey] || serviceConfig.defaultLimit));
+    const windowMs = Number(data[windowKey] || serviceConfig.defaultWindow);
     displayMode = data.display_mode || data.default_display_mode || 'count';
 
     const now = Date.now();

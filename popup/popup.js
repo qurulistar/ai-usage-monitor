@@ -4,14 +4,17 @@ const DEFAULT_SETTINGS = {
   claude_limit: 45,
   claude_window: 5 * 60 * 60 * 1000,
   gemini_limit: 50,
-  gemini_window: 3 * 60 * 60 * 1000,
+  gemini_window: 5 * 60 * 60 * 1000,
   aistudio_limit: 50,
-  aistudio_window: 3 * 60 * 60 * 1000,
+  aistudio_window: 5 * 60 * 60 * 1000,
+  codex_limit: 25,
+  codex_window: 5 * 60 * 60 * 1000,
   default_display_mode: 'count'
 };
 
 // Global state tracking
 let activeHistoryTab = 'claude';
+const SERVICES = ['claude', 'gemini', 'aistudio', 'codex'];
 let displayMode = 'count'; // 'count' or 'percent'
 const CIRCUMFERENCE = 251.2; // 2 * Math.PI * r (r=40)
 
@@ -54,21 +57,22 @@ async function renderDashboard() {
     'claude_logs', 'claude_limit', 'claude_window',
     'gemini_logs', 'gemini_limit', 'gemini_window',
     'aistudio_logs', 'aistudio_limit', 'aistudio_window',
+    'codex_logs', 'codex_limit', 'codex_window',
     'display_mode', 'default_display_mode', 'claude_reset_time', 'claude_session_reset'
   ]);
 
   displayMode = data.display_mode || data.default_display_mode || 'count';
   updateSegmentedSwitcherUI();
 
-  const services = ['claude', 'gemini', 'aistudio'];
+  const services = SERVICES;
   const now = Date.now();
   let changed = false;
   const storageUpdates = {};
 
   for (const s of services) {
     const logs = data[`${s}_logs`] || [];
-    const limit = data[`${s}_limit`] || DEFAULT_SETTINGS[`${s}_limit`];
-    const windowMs = data[`${s}_window`] || DEFAULT_SETTINGS[`${s}_window`];
+    const limit = Math.max(1, Number(data[`${s}_limit`] || DEFAULT_SETTINGS[`${s}_limit`]));
+    const windowMs = Number(data[`${s}_window`] || DEFAULT_SETTINGS[`${s}_window`]);
 
     // Filter active logs (decay expired ones)
     const activeLogs = logs.filter(timestamp => now - timestamp < windowMs);
@@ -341,6 +345,7 @@ function setupEventListeners() {
       'claude_limit', 'claude_window', 'claude_logs',
       'gemini_limit', 'gemini_window', 'gemini_logs',
       'aistudio_limit', 'aistudio_window', 'aistudio_logs',
+      'codex_limit', 'codex_window', 'codex_logs',
       'default_display_mode', 'claude_reset_time'
     ]);
 
@@ -368,6 +373,13 @@ function setupEventListeners() {
     
     const activeAistudioLogs = (data.aistudio_logs || []).filter(t => now - t < aistudioWinMs);
     document.getElementById('input-aistudio-current-count').value = activeAistudioLogs.length;
+
+    document.getElementById('input-codex-limit').value = data.codex_limit || DEFAULT_SETTINGS.codex_limit;
+    const codexWinMs = data.codex_window || DEFAULT_SETTINGS.codex_window;
+    document.getElementById('input-codex-window').value = codexWinMs / 3600000;
+
+    const activeCodexLogs = (data.codex_logs || []).filter(t => now - t < codexWinMs);
+    document.getElementById('input-codex-current-count').value = activeCodexLogs.length;
 
     // General display mode default
     document.getElementById('input-default-display-mode').value = data.default_display_mode || DEFAULT_SETTINGS.default_display_mode;
@@ -402,14 +414,19 @@ function setupEventListeners() {
     const claudeTargetCount = parseInt(document.getElementById('input-claude-current-count').value) || 0;
     
     const geminiLimit = parseInt(document.getElementById('input-gemini-limit').value) || DEFAULT_SETTINGS.gemini_limit;
-    const geminiWindow = parseFloat(document.getElementById('input-gemini-window').value) || 3;
+    const geminiWindow = parseFloat(document.getElementById('input-gemini-window').value) || 5;
     const geminiWindowMs = geminiWindow * 60 * 60 * 1000;
     const geminiTargetCount = parseInt(document.getElementById('input-gemini-current-count').value) || 0;
 
     const aistudioLimit = parseInt(document.getElementById('input-aistudio-limit').value) || DEFAULT_SETTINGS.aistudio_limit;
-    const aistudioWindow = parseFloat(document.getElementById('input-aistudio-window').value) || 3;
+    const aistudioWindow = parseFloat(document.getElementById('input-aistudio-window').value) || 5;
     const aistudioWindowMs = aistudioWindow * 60 * 60 * 1000;
     const aistudioTargetCount = parseInt(document.getElementById('input-aistudio-current-count').value) || 0;
+
+    const codexLimit = parseInt(document.getElementById('input-codex-limit').value) || DEFAULT_SETTINGS.codex_limit;
+    const codexWindow = parseFloat(document.getElementById('input-codex-window').value) || 5;
+    const codexWindowMs = codexWindow * 60 * 60 * 1000;
+    const codexTargetCount = parseInt(document.getElementById('input-codex-current-count').value) || 0;
 
     const defaultDisplayMode = document.getElementById('input-default-display-mode').value || 'count';
 
@@ -417,6 +434,7 @@ function setupEventListeners() {
     const updatedClaudeLogs = await calibrateServiceCount('claude', claudeTargetCount, claudeLimit, claudeWindowMs);
     const updatedGeminiLogs = await calibrateServiceCount('gemini', geminiTargetCount, geminiLimit, geminiWindowMs);
     const updatedAistudioLogs = await calibrateServiceCount('aistudio', aistudioTargetCount, aistudioLimit, aistudioWindowMs);
+    const updatedCodexLogs = await calibrateServiceCount('codex', codexTargetCount, codexLimit, codexWindowMs);
 
     await chrome.storage.local.set({
       claude_limit: claudeLimit,
@@ -428,6 +446,9 @@ function setupEventListeners() {
       aistudio_limit: aistudioLimit,
       aistudio_window: aistudioWindowMs,
       aistudio_logs: updatedAistudioLogs,
+      codex_limit: codexLimit,
+      codex_window: codexWindowMs,
+      codex_logs: updatedCodexLogs,
       default_display_mode: defaultDisplayMode
     });
 
@@ -481,10 +502,16 @@ function setupEventListeners() {
     await chrome.storage.local.set({
       claude_limit: DEFAULT_SETTINGS.claude_limit,
       claude_window: DEFAULT_SETTINGS.claude_window,
+      claude_logs: [],
       gemini_limit: DEFAULT_SETTINGS.gemini_limit,
       gemini_window: DEFAULT_SETTINGS.gemini_window,
+      gemini_logs: [],
       aistudio_limit: DEFAULT_SETTINGS.aistudio_limit,
       aistudio_window: DEFAULT_SETTINGS.aistudio_window,
+      aistudio_logs: [],
+      codex_limit: DEFAULT_SETTINGS.codex_limit,
+      codex_window: DEFAULT_SETTINGS.codex_window,
+      codex_logs: [],
       default_display_mode: DEFAULT_SETTINGS.default_display_mode
     });
 
@@ -500,7 +527,12 @@ function setupEventListeners() {
     document.getElementById('input-aistudio-window').value = DEFAULT_SETTINGS.aistudio_window / 3600000;
     document.getElementById('input-aistudio-current-count').value = 0;
 
+    document.getElementById('input-codex-limit').value = DEFAULT_SETTINGS.codex_limit;
+    document.getElementById('input-codex-window').value = DEFAULT_SETTINGS.codex_window / 3600000;
+    document.getElementById('input-codex-current-count').value = 0;
+
     document.getElementById('input-default-display-mode').value = DEFAULT_SETTINGS.default_display_mode;
+    await renderDashboard();
   });
 
   // Spotlight card glows
@@ -516,8 +548,17 @@ function setupEventListeners() {
 
   // Bidirectional storage listener to keep open dashboards synced
   chrome.storage.onChanged.addListener((changes) => {
-    if (changes.display_mode) {
-      displayMode = changes.display_mode.newValue;
+    const relevantKeys = [
+      ...SERVICES.flatMap(service => [`${service}_logs`, `${service}_limit`, `${service}_window`]),
+      'display_mode',
+      'default_display_mode',
+      'claude_reset_time',
+      'claude_session_reset'
+    ];
+    if (Object.keys(changes).some(key => relevantKeys.includes(key))) {
+      if (changes.display_mode) {
+        displayMode = changes.display_mode.newValue;
+      }
       renderDashboard();
     }
   });

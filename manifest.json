@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AI Usage Monitor",
   "version": "1.1.0",
-  "description": "Tracks and visualizes Claude Pro and Gemini usage limits in real-time.",
+  "description": "Tracks and visualizes Claude Pro, Gemini, AI Studio, and Codex usage limits in real-time.",
   "permissions": ["storage", "alarms"],
   "host_permissions": ["*://*/*"],
   "background": {
@@ -17,7 +17,8 @@
       "matches": [
         "https://claude.ai/*",
         "https://gemini.google.com/*",
-        "https://aistudio.google.com/*"
+        "https://aistudio.google.com/*",
+        "https://chatgpt.com/*"
       ]
     }
   ],

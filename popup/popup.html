@@ -22,6 +22,10 @@
         <stop offset="0%" stop-color="#FCD34D" />
         <stop offset="100%" stop-color="#D97706" />
       </linearGradient>
+      <linearGradient id="codex-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#34D399" />
+        <stop offset="100%" stop-color="#60A5FA" />
+      </linearGradient>
     </defs>
   </svg>
 
@@ -131,6 +135,33 @@
             </div>
           </div>
         </div>
+
+        <!-- Codex Card -->
+        <div class="aim-card aim-card-codex" data-service="codex">
+          <div class="aim-card-visual aim-battery-visual">
+            <div class="aim-horizontal-battery-meter">
+              <div class="aim-battery-body">
+                <div id="codex-battery-level" class="aim-battery-level"></div>
+              </div>
+              <div class="aim-battery-cap"></div>
+            </div>
+            <div class="aim-battery-text">
+              <span id="codex-count" class="aim-count-val">0</span>
+              <span id="codex-limit" class="aim-limit-val">/25</span>
+            </div>
+          </div>
+          <div class="aim-card-details">
+            <div class="aim-service-header">
+              <span class="aim-service-label">Codex</span>
+              <div class="aim-dot-indicator codex-dot"></div>
+            </div>
+            <div class="aim-countdown-text" id="codex-decay-info">枠解放: なし</div>
+            <div class="aim-card-actions">
+              <button class="aim-btn-adjust decrease" data-service="codex" title="回数を1減らす">-</button>
+              <button class="aim-btn-adjust increase" data-service="codex" title="回数を1増やす">+</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- History Log Collapsible Panel -->
@@ -146,6 +177,7 @@
             <button class="aim-tab-btn active" data-tab="claude">Claude</button>
             <button class="aim-tab-btn" data-tab="gemini">Gemini</button>
             <button class="aim-tab-btn" data-tab="aistudio">AI Studio</button>
+            <button class="aim-tab-btn" data-tab="codex">Codex</button>
           </div>
           <div id="aim-log-list" class="aim-log-list">
             <!-- Dynamically populated -->
@@ -222,6 +254,26 @@
               <div class="aim-input-field flex-wide">
                 <label for="input-aistudio-current-count" title="現在の正確な送信数に手動で同期します">現在のカウント（同期用）</label>
                 <input type="number" id="input-aistudio-current-count" min="0" max="500" placeholder="現在の回数">
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Codex limits -->
+          <div class="aim-setting-group">
+            <h4 class="aim-setting-service codex-text">Codex</h4>
+            <div class="aim-input-row">
+              <div class="aim-input-field">
+                <label for="input-codex-limit">送信上限（回）</label>
+                <input type="number" id="input-codex-limit" min="1" max="500">
+              </div>
+              <div class="aim-input-field">
+                <label for="input-codex-window">時間枠（時間）</label>
+                <input type="number" id="input-codex-window" min="1" max="48" step="0.5">
+              </div>
+              <div class="aim-input-field flex-wide">
+                <label for="input-codex-current-count" title="現在の正確な送信数に手動で同期します">現在のカウント（同期用）</label>
+                <input type="number" id="input-codex-current-count" min="0" max="500" placeholder="現在の回数">
               </div>
             </div>
           </div>
